@@ -1,0 +1,27 @@
+{
+  "ENABLED" = "Enabled";
+  "INVERTED" = "Inverted";
+  "THICKNESS" = "Thickness";
+  "COLOR" = "Color";
+  "SHADOW_COLOR" = "Shadow color";
+  "TOP" = "Top";
+  "LEFT" = "Left";
+  "RIGHT" = "Right";
+  "BOTTOM" = "Bottom";
+  "POSITION" = "Position";
+  "SHADOW" = "Shadow";
+  "COLOR" = "Color";
+  "MEDIA_COLOR" = "Color: media volume";
+  "RINGER_COLOR" = "Color: ringer volume";
+  "GRADIENT" = "Gradient";
+  "BACKGROUND" = "Background";
+  "LAYOUT" = "Layout";
+  "VERTICAL_MARGIN" = "Vertical margin";
+  "HORIZONTAL_MARGIN" = "Horizontal margin";
+  "CORNER_RADIUS" = "Corner radius";
+  "OPACITY" = "Opacity";
+
+  "SOURCE_CODE" = "Source code";
+  "DONATE_TO_NEPETA" = "Donate to Nepeta";
+  "SUPPORT_ME" = "Support me!";
+}
