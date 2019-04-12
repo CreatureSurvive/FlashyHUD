@@ -22,6 +22,7 @@
   "VERTICAL_OFFSET" = "Vertical offset";
   "CORNER_RADIUS" = "Corner radius";
   "OPACITY" = "Opacity";
+  "DISABLE_ANIMATIONS" = "Disable animations";
 
   "SOURCE_CODE" = "Source code";
   "DONATE_TO_NEPETA" = "Donate to Nepeta";

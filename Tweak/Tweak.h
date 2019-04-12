@@ -2,11 +2,15 @@
 #import <UIKit/UIKit.h>
 #import <UIKit/UIControl.h>
 
+@interface FLHGradientLayer : CAGradientLayer
+
+@end
+
 @interface SBHUDView : UIView
 
 @property (assign,nonatomic) float progress;
-@property (nonatomic, retain) CAGradientLayer *flhLayer;
-@property (nonatomic, retain) CAGradientLayer *flhBackgroundLayer;
+@property (nonatomic, retain) FLHGradientLayer *flhLayer;
+@property (nonatomic, retain) FLHGradientLayer *flhBackgroundLayer;
 -(void)setProgress:(float)arg1 ;
 -(float)flhRealProgress;
 

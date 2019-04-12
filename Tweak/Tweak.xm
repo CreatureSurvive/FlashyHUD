@@ -5,6 +5,7 @@
 HBPreferences *preferences;
 
 BOOL enabled = true;
+BOOL disableAnimations = false;
 BOOL hasShadow = true;
 BOOL inverted = false;
 BOOL gradient = false;
@@ -22,6 +23,15 @@ UIColor *ringerColor = nil;
 UIColor *gradientColor = nil;
 UIColor *backgroundColor = nil;
 UIView *lastHUD = nil;
+
+@implementation FLHGradientLayer
+
+- (id<CAAction>)actionForKey:(NSString *)event {
+    if (disableAnimations) return nil;
+    return [super actionForKey:event];
+}
+
+@end
 
 CGRect getFrameForProgress(float progress, CGRect bounds) {
     CGFloat fullLength = 0;
@@ -134,8 +144,8 @@ CGPoint getEndPoint() {
 
 %hook SBHUDView
 
-%property (nonatomic, retain) CAGradientLayer *flhLayer;
-%property (nonatomic, retain) CAGradientLayer *flhBackgroundLayer;
+%property (nonatomic, retain) FLHGradientLayer *flhLayer;
+%property (nonatomic, retain) FLHGradientLayer *flhBackgroundLayer;
 
 %new
 -(float)flhRealProgress {
@@ -163,21 +173,17 @@ CGPoint getEndPoint() {
     if (!self.flhBackgroundLayer) {
         self.layer.sublayers = nil;
         self.layer.masksToBounds = NO;
-        self.flhBackgroundLayer = [[CAGradientLayer alloc] init];
+        self.flhBackgroundLayer = [[FLHGradientLayer alloc] init];
         self.flhBackgroundLayer.masksToBounds = NO;
  
         [self.layer addSublayer:self.flhBackgroundLayer];
     }
 
     if (!self.flhLayer) {
-        self.flhLayer = [[CAGradientLayer alloc] init];
+        self.flhLayer = [[FLHGradientLayer alloc] init];
         self.flhLayer.masksToBounds = NO;
  
         [self.layer addSublayer:self.flhLayer];
-
-        CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"frame"];
-        animation.duration = 0.15f;
-        [self.flhLayer addAnimation:animation forKey:@"frame"];
     }
 
     self.flhBackgroundLayer.frame = getFrameForProgress(1.0, bounds);
@@ -188,7 +194,7 @@ CGPoint getEndPoint() {
     }
 
     self.flhLayer.backgroundColor = color.CGColor;
-
+    
     self.flhLayer.frame = getFrameForProgress([self flhRealProgress], bounds);
     self.flhLayer.startPoint = getStartPoint();
     self.flhLayer.endPoint = getEndPoint();
@@ -243,6 +249,11 @@ CGPoint getEndPoint() {
     
     if (hidden) return;
 
+    if (disableAnimations) {
+        self.alpha = 1.0;
+        return;
+    }
+    
     self.alpha = 0.0;
     [UIView animateWithDuration:0.15 delay:0 options:UIViewAnimationOptionCurveLinear animations:^{
         self.alpha = 1.0;
@@ -279,6 +290,7 @@ void reloadColors() {
     [preferences registerBool:&background default:YES forKey:@"Background"];
     [preferences registerBool:&inverted default:NO forKey:@"Inverted"];
     [preferences registerBool:&gradient default:NO forKey:@"Gradient"];
+    [preferences registerBool:&disableAnimations default:NO forKey:@"DisableAnimations"];
     [preferences registerInteger:&location default:0 forKey:@"Location"];
     [preferences registerFloat:&thickness default:5.0 forKey:@"Thickness"];
     [preferences registerFloat:&size default:1.0 forKey:@"Size"];
