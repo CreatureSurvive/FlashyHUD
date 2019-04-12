@@ -4,6 +4,7 @@
 
 HBPreferences *preferences;
 
+BOOL dpkgInvalid = false;
 BOOL enabled = true;
 BOOL disableAnimations = false;
 BOOL hasShadow = true;
@@ -268,6 +269,30 @@ CGPoint getEndPoint() {
 
 %end
 
+%group FlashyHUDIntegrityFail
+
+%hook SpringBoard
+
+-(void)applicationDidFinishLaunching:(id)arg1 {
+    %orig;
+    if (!dpkgInvalid) return;
+    UIAlertController *alertController = [UIAlertController
+        alertControllerWithTitle:@"😡😡😡"
+        message:@"The build of FlashyHUD you're using comes from an untrusted source. Pirate repositories can distribute malware and you will get subpar user experience using any tweaks from them.\nRemember: FlashyHUD is free. Uninstall this build and install the proper version of FlashyHUD from:\nhttps://repo.nepeta.me/\n(it's free, damnit, why would you pirate that!?)"
+        preferredStyle:UIAlertControllerStyleAlert
+    ];
+
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Damn!" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        [((UIApplication*)self).keyWindow.rootViewController dismissViewControllerAnimated:YES completion:NULL];
+    }]];
+
+    [((UIApplication*)self).keyWindow.rootViewController presentViewController:alertController animated:YES completion:NULL];
+}
+
+%end
+
+%end
+
 void refreshHUD() {
     [CATransaction begin];
     [CATransaction setDisableActions: YES];
@@ -287,6 +312,13 @@ void reloadColors() {
 }
 
 %ctor {
+    dpkgInvalid = ![[NSFileManager defaultManager] fileExistsAtPath:@"/var/lib/dpkg/info/me.nepeta.flashyhud.list"];
+
+    if (dpkgInvalid) {
+        %init(FlashyHUDIntegrityFail);
+        return;
+    }
+
     preferences = [[HBPreferences alloc] initWithIdentifier:@"me.nepeta.flashyhud"];
 
     [preferences registerBool:&enabled default:YES forKey:@"Enabled"];
