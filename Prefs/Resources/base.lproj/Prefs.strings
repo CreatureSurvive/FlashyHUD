@@ -16,8 +16,8 @@
   "GRADIENT" = "Gradient";
   "BACKGROUND" = "Background";
   "LAYOUT" = "Layout";
-  "VERTICAL_MARGIN" = "Vertical margin";
-  "HORIZONTAL_MARGIN" = "Horizontal margin";
+  "SIZE" = "Size (length)";
+  "OFFSET" = "Distance from the edge";
   "CORNER_RADIUS" = "Corner radius";
   "OPACITY" = "Opacity";
 

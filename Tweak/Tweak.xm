@@ -11,8 +11,8 @@ BOOL gradient = false;
 BOOL background = true;
 NSInteger location = 0; // 0: top; 1: right; 2: bottom; 3: left
 CGFloat thickness = 5;
-CGFloat verticalMargin = 0;
-CGFloat horizontalMargin = 0;
+CGFloat size = 1.0;
+CGFloat offset = 0;
 CGFloat cornerRadius = 0;
 CGFloat opacity = 1.0;
 UIColor *mediaColor = nil;
@@ -22,55 +22,68 @@ UIColor *backgroundColor = nil;
 UIView *lastHUD = nil;
 
 CGRect getFrameForProgress(float progress, CGRect bounds) {
-    CGFloat innerWidth = (bounds.size.width - horizontalMargin * 2.0);
-    CGFloat innerHeight = (bounds.size.height - verticalMargin * 2.0);
+    CGFloat fullLength = 0;
+
+    switch (location) {
+        case 1:
+        case 3:
+            fullLength = bounds.size.height;
+            break;
+        default:
+            fullLength = bounds.size.width;
+            break;
+    }
+
+
+    CGFloat length = fullLength * size;
+    CGFloat sizeOffset = (fullLength - length) / 2.0;
 
     if (inverted) {
         switch (location) {
             case 0: //top
-                return CGRectMake(innerWidth + horizontalMargin - innerWidth * progress,
-                                verticalMargin,
-                                innerWidth * progress,
+                return CGRectMake(length + sizeOffset - length * progress,
+                                offset,
+                                length * progress,
                                 thickness);
             case 1: //right
-                return CGRectMake(bounds.size.width - thickness - horizontalMargin,
-                                verticalMargin,
+                return CGRectMake(bounds.size.width - thickness - offset,
+                                sizeOffset,
                                 thickness,
-                                innerHeight * progress);
+                                length * progress);
             case 2: //bottom
-                return CGRectMake(innerWidth + horizontalMargin - innerWidth * progress,
-                                bounds.size.height - thickness - verticalMargin,
-                                innerWidth * progress,
+                return CGRectMake(length + sizeOffset - length * progress,
+                                bounds.size.height - thickness - offset,
+                                length * progress,
                                 thickness);
             default: //left
-                return CGRectMake(horizontalMargin,
-                                verticalMargin,
+                return CGRectMake(offset,
+                                sizeOffset,
                                 thickness,
-                                innerHeight * progress);
+                                length * progress);
         }
     }
 
     switch (location) {
         case 0: //top
-            return CGRectMake(horizontalMargin,
-                            verticalMargin,
-                            innerWidth * progress,
+            return CGRectMake(sizeOffset,
+                            offset,
+                            length * progress,
                             thickness);
         case 1: //right
-            return CGRectMake(bounds.size.width - thickness - horizontalMargin,
-                            innerHeight + verticalMargin - innerHeight * progress,
+            return CGRectMake(bounds.size.width - thickness - offset,
+                            length + sizeOffset - length * progress,
                             thickness,
-                            innerHeight * progress);
+                            length * progress);
         case 2: //bottom
-            return CGRectMake(horizontalMargin,
-                            bounds.size.height - thickness - verticalMargin,
-                            innerWidth * progress,
+            return CGRectMake(sizeOffset,
+                            bounds.size.height - thickness - offset,
+                            length * progress,
                             thickness);
         default: //left
-            return CGRectMake(horizontalMargin,
-                            innerHeight + verticalMargin - innerHeight * progress,
+            return CGRectMake(offset,
+                            length + sizeOffset - length * progress,
                             thickness,
-                            innerHeight * progress);
+                            length * progress);
     }
 }
 
@@ -256,19 +269,6 @@ void reloadColors() {
 
 %ctor {
     preferences = [[HBPreferences alloc] initWithIdentifier:@"me.nepeta.flashyhud"];
-    [preferences registerDefaults:@{
-        @"Enabled": @YES,
-        @"HasShadow": @YES,
-        @"Background": @YES,
-        @"Inverted": @NO,
-        @"Gradient": @NO,
-        @"Location": @(0),
-        @"Thickness": @(5.0),
-        @"VerticalMargin": @(0.0),
-        @"HorizontalMargin": @(0.0),
-        @"CornerRadius": @(0.0),
-        @"Opacity": @(1.0),
-    }];
 
     [preferences registerBool:&enabled default:YES forKey:@"Enabled"];
     [preferences registerBool:&hasShadow default:YES forKey:@"HasShadow"];
@@ -277,8 +277,8 @@ void reloadColors() {
     [preferences registerBool:&gradient default:NO forKey:@"Gradient"];
     [preferences registerInteger:&location default:0 forKey:@"Location"];
     [preferences registerFloat:&thickness default:5.0 forKey:@"Thickness"];
-    [preferences registerFloat:&verticalMargin default:0.0 forKey:@"VerticalMargin"];
-    [preferences registerFloat:&horizontalMargin default:0.0 forKey:@"HorizontalMargin"];
+    [preferences registerFloat:&size default:1.0 forKey:@"Size"];
+    [preferences registerFloat:&offset default:0.0 forKey:@"Offset"];
     [preferences registerFloat:&cornerRadius default:0.0 forKey:@"CornerRadius"];
     [preferences registerFloat:&opacity default:1.0 forKey:@"Opacity"];
 
