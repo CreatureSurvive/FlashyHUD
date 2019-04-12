@@ -7,6 +7,7 @@ HBPreferences *preferences;
 BOOL enabled = true;
 BOOL disableAnimations = false;
 BOOL hasShadow = true;
+BOOL backgroundShadow = true;
 BOOL inverted = false;
 BOOL gradient = false;
 BOOL background = true;
@@ -194,7 +195,7 @@ CGPoint getEndPoint() {
     }
 
     self.flhLayer.backgroundColor = color.CGColor;
-    
+
     self.flhLayer.frame = getFrameForProgress([self flhRealProgress], bounds);
     self.flhLayer.startPoint = getStartPoint();
     self.flhLayer.endPoint = getEndPoint();
@@ -207,13 +208,16 @@ CGPoint getEndPoint() {
         self.flhLayer.shadowRadius = thickness;
         self.flhLayer.shadowColor = color.CGColor;
         self.flhLayer.shadowOffset = getShadowOffset();
+    } else {
+        self.flhLayer.shadowOpacity = 0;
+    }
 
+    if (backgroundShadow) {
         self.flhBackgroundLayer.shadowOpacity = 0.5;
         self.flhBackgroundLayer.shadowRadius = thickness;
         self.flhBackgroundLayer.shadowColor = backgroundColor.CGColor;
         self.flhBackgroundLayer.shadowOffset = getShadowOffset();
     } else {
-        self.flhLayer.shadowOpacity = 0;
         self.flhBackgroundLayer.shadowOpacity = 0;
     }
 
@@ -287,6 +291,7 @@ void reloadColors() {
 
     [preferences registerBool:&enabled default:YES forKey:@"Enabled"];
     [preferences registerBool:&hasShadow default:YES forKey:@"HasShadow"];
+    [preferences registerBool:&backgroundShadow default:YES forKey:@"BackgroundShadow"];
     [preferences registerBool:&background default:YES forKey:@"Background"];
     [preferences registerBool:&inverted default:NO forKey:@"Inverted"];
     [preferences registerBool:&gradient default:NO forKey:@"Gradient"];
