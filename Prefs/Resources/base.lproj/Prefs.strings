@@ -18,6 +18,8 @@
   "LAYOUT" = "Layout";
   "SIZE" = "Size (length)";
   "OFFSET" = "Distance from the edge";
+  "HORIZONTAL_OFFSET" = "Horizontal offset";
+  "VERTICAL_OFFSET" = "Vertical offset";
   "CORNER_RADIUS" = "Corner radius";
   "OPACITY" = "Opacity";
 

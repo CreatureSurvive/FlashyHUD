@@ -13,6 +13,8 @@ NSInteger location = 0; // 0: top; 1: right; 2: bottom; 3: left
 CGFloat thickness = 5;
 CGFloat size = 1.0;
 CGFloat offset = 0;
+CGFloat horizontalOffset = 0;
+CGFloat verticalOffset = 0;
 CGFloat cornerRadius = 0;
 CGFloat opacity = 1.0;
 UIColor *mediaColor = nil;
@@ -23,6 +25,8 @@ UIView *lastHUD = nil;
 
 CGRect getFrameForProgress(float progress, CGRect bounds) {
     CGFloat fullLength = 0;
+    CGFloat x = bounds.size.width * horizontalOffset;
+    CGFloat y = bounds.size.height * verticalOffset;
 
     switch (location) {
         case 1:
@@ -41,23 +45,23 @@ CGRect getFrameForProgress(float progress, CGRect bounds) {
     if (inverted) {
         switch (location) {
             case 0: //top
-                return CGRectMake(length + sizeOffset - length * progress,
-                                offset,
+                return CGRectMake(x + length + sizeOffset - length * progress,
+                                y + offset,
                                 length * progress,
                                 thickness);
             case 1: //right
-                return CGRectMake(bounds.size.width - thickness - offset,
-                                sizeOffset,
+                return CGRectMake(x + bounds.size.width - thickness - offset,
+                                y + sizeOffset,
                                 thickness,
                                 length * progress);
             case 2: //bottom
-                return CGRectMake(length + sizeOffset - length * progress,
-                                bounds.size.height - thickness - offset,
+                return CGRectMake(x + length + sizeOffset - length * progress,
+                                y + bounds.size.height - thickness - offset,
                                 length * progress,
                                 thickness);
             default: //left
-                return CGRectMake(offset,
-                                sizeOffset,
+                return CGRectMake(x + offset,
+                                y + sizeOffset,
                                 thickness,
                                 length * progress);
         }
@@ -65,23 +69,23 @@ CGRect getFrameForProgress(float progress, CGRect bounds) {
 
     switch (location) {
         case 0: //top
-            return CGRectMake(sizeOffset,
-                            offset,
+            return CGRectMake(x + sizeOffset,
+                            y + offset,
                             length * progress,
                             thickness);
         case 1: //right
-            return CGRectMake(bounds.size.width - thickness - offset,
-                            length + sizeOffset - length * progress,
+            return CGRectMake(x + bounds.size.width - thickness - offset,
+                            y + length + sizeOffset - length * progress,
                             thickness,
                             length * progress);
         case 2: //bottom
-            return CGRectMake(sizeOffset,
-                            bounds.size.height - thickness - offset,
+            return CGRectMake(x + sizeOffset,
+                            y + bounds.size.height - thickness - offset,
                             length * progress,
                             thickness);
         default: //left
-            return CGRectMake(offset,
-                            length + sizeOffset - length * progress,
+            return CGRectMake(x + offset,
+                            y + length + sizeOffset - length * progress,
                             thickness,
                             length * progress);
     }
@@ -279,6 +283,8 @@ void reloadColors() {
     [preferences registerFloat:&thickness default:5.0 forKey:@"Thickness"];
     [preferences registerFloat:&size default:1.0 forKey:@"Size"];
     [preferences registerFloat:&offset default:0.0 forKey:@"Offset"];
+    [preferences registerFloat:&horizontalOffset default:0.0 forKey:@"HorizontalOffset"];
+    [preferences registerFloat:&verticalOffset default:0.0 forKey:@"VerticalOffset"];
     [preferences registerFloat:&cornerRadius default:0.0 forKey:@"CornerRadius"];
     [preferences registerFloat:&opacity default:1.0 forKey:@"Opacity"];
 
