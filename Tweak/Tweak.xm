@@ -340,6 +340,7 @@ void reloadColors() {
     mediaColor = [UIColor whiteColor];
     ringerColor = [UIColor whiteColor];
     gradientColor = [UIColor blackColor];
+    backgroundColor = [UIColor blackColor];
 
     reloadColors();
     CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)reloadColors, (CFStringRef)@"me.nepeta.flashyhud/ReloadColors", NULL, (CFNotificationSuspensionBehavior)kNilOptions);
