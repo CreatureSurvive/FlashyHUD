@@ -95,6 +95,24 @@
 			<key>PostNotification</key>
 			<string>me.nepeta.flashyhud/ReloadPrefs</string>
 		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>SETTINGS</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string></string>
+			<key>detail</key>
+			<string>FLHSavedSettingsListController</string>
+			<key>defaults</key>
+			<string>me.nepeta.flashyhud</string>
+			<key>label</key>
+			<string>PRESET</string>
+		</dict>
 
 		<dict>
 			<key>cell</key>
@@ -476,6 +494,30 @@
 			<string>PSButtonCell</string>
 			<key>label</key>
 			<string>RESPRING</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>saveSettings:</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>SAVE_SETTINGS</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>shareSettings:</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>SHARE_SETTINGS</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>importSettings:</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>IMPORT_SETTINGS</string>
 		</dict>
 		<dict>
 			<key>action</key>
