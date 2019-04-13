@@ -123,7 +123,7 @@
 
 -(NSDictionary*)deserializeDictionary:(NSString *)string {
     NSData *plist = [[NSData alloc] initWithBase64EncodedString:string options:kNilOptions];
-    if !(plist) return nil;
+    if (!plist) return nil;
     
     return [NSPropertyListSerialization propertyListWithData:plist
                  options:kNilOptions
