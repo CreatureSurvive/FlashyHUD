@@ -164,7 +164,7 @@ CGPoint getEndPoint() {
     lastHUD = self;
 
     UIColor *color = mediaColor;
-    if ([self isKindOfClass:%c(SBRingerHUDView)]) {
+    if ([self isKindOfClass:%c(SBRingerHUDView)] || ([self respondsToSelector:@selector(mode)] && [((SBVolumeHUDView *)self) mode] == 1)) {
         color = ringerColor;
     }
 

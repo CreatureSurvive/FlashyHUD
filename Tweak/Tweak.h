@@ -18,6 +18,8 @@
 
 @interface SBVolumeHUDView : SBHUDView
 
+@property(assign, nonatomic) int mode;
+
 @end
 
 @interface SBRingerHUDView : SBHUDView
