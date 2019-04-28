@@ -23,6 +23,9 @@ CGFloat horizontalOffset = 0;
 CGFloat verticalOffset = 0;
 CGFloat cornerRadius = 0;
 CGFloat opacity = 1.0;
+CGFloat backgroundPadding = 0;
+CGFloat backgroundCornerRadius = 0;
+BOOL backgroundCornerRadiusEnabled = false;
 UIColor *mediaColor = nil;
 UIColor *ringerColor = nil;
 UIColor *gradientColor = nil;
@@ -38,7 +41,7 @@ UIView *lastHUD = nil;
 
 @end
 
-CGRect getFrameForProgress(float progress, CGRect bounds) {
+CGRect getFrameForProgress(float progress, CGRect bounds, CGFloat padding) {
     CGFloat fullLength = 0;
     CGFloat x = bounds.size.width * horizontalOffset;
     CGFloat y = bounds.size.height * verticalOffset;
@@ -54,30 +57,31 @@ CGRect getFrameForProgress(float progress, CGRect bounds) {
     }
 
 
-    CGFloat length = fullLength * size;
+    CGFloat length = fullLength * size + padding * 2.0;
+    CGFloat width = thickness + padding * 2.0;
     CGFloat sizeOffset = (fullLength - length) / 2.0;
 
     if (inverted) {
         switch (location) {
             case 0: //top
                 return CGRectMake(x + length + sizeOffset - length * progress,
-                                y + offset,
+                                y + offset - padding,
                                 length * progress,
-                                thickness);
+                                width);
             case 1: //right
-                return CGRectMake(x + bounds.size.width - thickness - offset,
+                return CGRectMake(x + bounds.size.width - width - offset + padding,
                                 y + sizeOffset,
-                                thickness,
+                                width,
                                 length * progress);
             case 2: //bottom
                 return CGRectMake(x + length + sizeOffset - length * progress,
-                                y + bounds.size.height - thickness - offset,
+                                y + bounds.size.height - width - offset + padding,
                                 length * progress,
-                                thickness);
+                                width);
             default: //left
-                return CGRectMake(x + offset,
+                return CGRectMake(x + offset - padding,
                                 y + sizeOffset,
-                                thickness,
+                                width,
                                 length * progress);
         }
     }
@@ -85,37 +89,38 @@ CGRect getFrameForProgress(float progress, CGRect bounds) {
     switch (location) {
         case 0: //top
             return CGRectMake(x + sizeOffset,
-                            y + offset,
+                            y + offset - padding,
                             length * progress,
-                            thickness);
+                            width);
         case 1: //right
-            return CGRectMake(x + bounds.size.width - thickness - offset,
+            return CGRectMake(x + bounds.size.width - width - offset + padding,
                             y + length + sizeOffset - length * progress,
-                            thickness,
+                            width,
                             length * progress);
         case 2: //bottom
             return CGRectMake(x + sizeOffset,
-                            y + bounds.size.height - thickness - offset,
+                            y + bounds.size.height - width - offset + padding,
                             length * progress,
-                            thickness);
+                            width);
         default: //left
-            return CGRectMake(x + offset,
+            return CGRectMake(x + offset - padding,
                             y + length + sizeOffset - length * progress,
-                            thickness,
+                            width,
                             length * progress);
     }
 }
 
-CGSize getShadowOffset() {
+CGSize getShadowOffset(CGFloat padding) {
+    CGFloat width = thickness + padding * 2.0;
     switch (location) {
         case 0: //top
-            return CGSizeMake(0, thickness/2.0);
+            return CGSizeMake(0, width/2.0);
         case 1: //right
-            return CGSizeMake(-thickness/2.0, 0);
+            return CGSizeMake(-width/2.0, 0);
         case 2: //bottom
-            return CGSizeMake(0, -thickness/2.0);
+            return CGSizeMake(0, -width/2.0);
         default: //left
-            return CGSizeMake(thickness/2.0, 0);
+            return CGSizeMake(width/2.0, 0);
     }
 }
 
@@ -191,7 +196,7 @@ CGPoint getEndPoint() {
         [self.layer addSublayer:self.flhLayer];
     }
 
-    self.flhBackgroundLayer.frame = getFrameForProgress(1.0, bounds);
+    self.flhBackgroundLayer.frame = getFrameForProgress(1.0, bounds, backgroundPadding);
     if (background) {
         self.flhBackgroundLayer.backgroundColor = backgroundColor.CGColor;
     } else {
@@ -200,18 +205,18 @@ CGPoint getEndPoint() {
 
     self.flhLayer.backgroundColor = color.CGColor;
 
-    self.flhLayer.frame = getFrameForProgress([self flhRealProgress], bounds);
+    self.flhLayer.frame = getFrameForProgress([self flhRealProgress], bounds, 0.0);
     self.flhLayer.startPoint = getStartPoint();
     self.flhLayer.endPoint = getEndPoint();
 
     self.flhLayer.cornerRadius = cornerRadius;
-    self.flhBackgroundLayer.cornerRadius = cornerRadius;
+    self.flhBackgroundLayer.cornerRadius = (backgroundCornerRadiusEnabled) ? backgroundCornerRadius : cornerRadius;
 
     if (hasShadow) {
         self.flhLayer.shadowOpacity = 0.5;
         self.flhLayer.shadowRadius = thickness;
         self.flhLayer.shadowColor = color.CGColor;
-        self.flhLayer.shadowOffset = getShadowOffset();
+        self.flhLayer.shadowOffset = getShadowOffset(0.0);
     } else {
         self.flhLayer.shadowOpacity = 0;
     }
@@ -220,7 +225,7 @@ CGPoint getEndPoint() {
         self.flhBackgroundLayer.shadowOpacity = 0.5;
         self.flhBackgroundLayer.shadowRadius = thickness;
         self.flhBackgroundLayer.shadowColor = backgroundColor.CGColor;
-        self.flhBackgroundLayer.shadowOffset = getShadowOffset();
+        self.flhBackgroundLayer.shadowOffset = getShadowOffset(backgroundPadding);
     } else {
         self.flhBackgroundLayer.shadowOpacity = 0;
     }
@@ -245,7 +250,7 @@ CGPoint getEndPoint() {
 
     CGRect bounds = [[UIScreen mainScreen] bounds];
     float progress = [self flhRealProgress];
-    self.flhLayer.frame = getFrameForProgress(progress, bounds);
+    self.flhLayer.frame = getFrameForProgress(progress, bounds, 0.0);
     if (hapticFeedback && (progress == 0.0 || progress == 1.0)) AudioServicesPlaySystemSound(1519);
 }
 
@@ -350,6 +355,7 @@ void reloadColors() {
     [preferences registerBool:&enableOnLockscreen default:NO forKey:@"EnableOnLockscreen"];
     [preferences registerBool:&backgroundShadow default:YES forKey:@"BackgroundShadow"];
     [preferences registerBool:&background default:YES forKey:@"Background"];
+    [preferences registerBool:&backgroundCornerRadiusEnabled default:NO forKey:@"BackgroundCornerRadiusEnabled"];
     [preferences registerBool:&inverted default:NO forKey:@"Inverted"];
     [preferences registerBool:&gradient default:NO forKey:@"Gradient"];
     [preferences registerBool:&disableAnimations default:NO forKey:@"DisableAnimations"];
@@ -360,6 +366,8 @@ void reloadColors() {
     [preferences registerFloat:&horizontalOffset default:0.0 forKey:@"HorizontalOffset"];
     [preferences registerFloat:&verticalOffset default:0.0 forKey:@"VerticalOffset"];
     [preferences registerFloat:&cornerRadius default:0.0 forKey:@"CornerRadius"];
+    [preferences registerFloat:&backgroundCornerRadius default:0.0 forKey:@"BackgroundCornerRadius"];
+    [preferences registerFloat:&backgroundPadding default:0.0 forKey:@"BackgroundPadding"];
     [preferences registerFloat:&opacity default:1.0 forKey:@"Opacity"];
 
     mediaColor = [UIColor whiteColor];

@@ -27,6 +27,8 @@
   "BEHAVIOR" = "Behavior";
   "HAPTIC_FEEDBACK" = "Haptic feedback";
   "ENABLE_ON_LOCKSCREEN" = "Enable on lockscreen";
+  "BACKGROUND_CORNER_RADIUS" = "Separate corner radius for background";
+  "BACKGROUND_PADDING" = "Background padding";
 
   "SOURCE_CODE" = "Source code";
   "DONATE_TO_NEPETA" = "Donate to Nepeta";
