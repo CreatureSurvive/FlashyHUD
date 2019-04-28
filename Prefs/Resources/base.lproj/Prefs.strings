@@ -26,6 +26,7 @@
   "PRESET" = "Saved settings";
   "BEHAVIOR" = "Behavior";
   "HAPTIC_FEEDBACK" = "Haptic feedback";
+  "ENABLE_ON_LOCKSCREEN" = "Enable on lockscreen";
 
   "SOURCE_CODE" = "Source code";
   "DONATE_TO_NEPETA" = "Donate to Nepeta";

@@ -14,6 +14,7 @@ BOOL inverted = false;
 BOOL gradient = false;
 BOOL background = true;
 BOOL hapticFeedback = true;
+BOOL enableOnLockscreen = false;
 NSInteger location = 0; // 0: top; 1: right; 2: bottom; 3: left
 CGFloat thickness = 5;
 CGFloat size = 1.0;
@@ -271,6 +272,24 @@ CGPoint getEndPoint() {
 
 %end
 
+%hook MPVolumeSlider
+
+- (bool)isOnScreenForVolumeDisplay {
+    if (enabled && enableOnLockscreen) return false;
+    return %orig;
+}
+
+%end
+
+%hook VolumeControl
+
+-(BOOL)_isMusicPlayingSomewhere {
+    if (enabled && enableOnLockscreen) return true;
+    return %orig;
+}
+
+%end
+
 %end
 
 %group FlashyHUDIntegrityFail
@@ -328,6 +347,7 @@ void reloadColors() {
     [preferences registerBool:&enabled default:YES forKey:@"Enabled"];
     [preferences registerBool:&hasShadow default:YES forKey:@"HasShadow"];
     [preferences registerBool:&hapticFeedback default:YES forKey:@"HapticFeedback"];
+    [preferences registerBool:&enableOnLockscreen default:NO forKey:@"EnableOnLockscreen"];
     [preferences registerBool:&backgroundShadow default:YES forKey:@"BackgroundShadow"];
     [preferences registerBool:&background default:YES forKey:@"Background"];
     [preferences registerBool:&inverted default:NO forKey:@"Inverted"];
