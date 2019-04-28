@@ -1,34 +1,9 @@
 {
   "ENABLED" = "Enabled";
-  "INVERTED" = "Inverted";
-  "THICKNESS" = "Thickness";
-  "COLOR" = "Color";
-  "SHADOW_COLOR" = "Shadow color";
-  "TOP" = "Top";
-  "LEFT" = "Left";
-  "RIGHT" = "Right";
-  "BOTTOM" = "Bottom";
-  "POSITION" = "Position";
-  "SHADOW" = "Shadow";
-  "COLOR" = "Color";
-  "MEDIA_COLOR" = "Color: media volume";
-  "RINGER_COLOR" = "Color: ringer volume";
-  "GRADIENT" = "Gradient";
+  "PRESET" = "Saved settings";
+  "HUD" = "HUD";
   "BACKGROUND" = "Background";
   "LAYOUT" = "Layout";
-  "SIZE" = "Size (length)";
-  "OFFSET" = "Distance from the edge";
-  "HORIZONTAL_OFFSET" = "Horizontal offset";
-  "VERTICAL_OFFSET" = "Vertical offset";
-  "CORNER_RADIUS" = "Corner radius";
-  "OPACITY" = "Opacity";
-  "DISABLE_ANIMATIONS" = "Disable animations";
-  "PRESET" = "Saved settings";
-  "BEHAVIOR" = "Behavior";
-  "HAPTIC_FEEDBACK" = "Haptic feedback";
-  "ENABLE_ON_LOCKSCREEN" = "Enable on lockscreen";
-  "BACKGROUND_CORNER_RADIUS" = "Separate corner radius for background";
-  "BACKGROUND_PADDING" = "Background padding";
 
   "SOURCE_CODE" = "Source code";
   "DONATE_TO_NEPETA" = "Donate to Nepeta";

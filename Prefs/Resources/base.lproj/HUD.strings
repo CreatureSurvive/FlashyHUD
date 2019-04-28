@@ -1,0 +1,20 @@
+{
+  "ENABLED" = "Enabled";
+  "INVERTED" = "Inverted";
+  "COLOR" = "Color";
+  "MEDIA_COLOR" = "Color: media volume";
+  "RINGER_COLOR" = "Color: ringer volume";
+  "SHADOW_COLOR" = "Shadow color";
+  "TOP" = "Top";
+  "LEFT" = "Left";
+  "RIGHT" = "Right";
+  "BOTTOM" = "Bottom";
+  "POSITION" = "Position";
+  "SHADOW" = "Shadow";
+  "COLOR" = "Color";
+  "GRADIENT" = "Gradient";
+  "DISABLE_ANIMATIONS" = "Disable animations";
+  "BEHAVIOR" = "Behavior";
+  "HAPTIC_FEEDBACK" = "Haptic feedback";
+  "ENABLE_ON_LOCKSCREEN" = "Enable on lockscreen";
+}

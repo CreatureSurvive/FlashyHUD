@@ -1,0 +1,11 @@
+{
+  "ENABLED" = "Enabled";
+  "COLOR" = "Color";
+  "SHADOW_COLOR" = "Shadow color";
+  "SHADOW" = "Shadow";
+  "COLOR" = "Color";
+  "GRADIENT" = "Gradient";
+  "BACKGROUND" = "Background";
+  "BACKGROUND_CORNER_RADIUS" = "Separate corner radius for background";
+  "BACKGROUND_PADDING" = "Background padding";
+}

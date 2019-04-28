@@ -4,7 +4,7 @@ TARGET = iphone:clang:11.2:9.0
 include $(THEOS)/makefiles/common.mk
 
 BUNDLE_NAME = FlashyHUDPrefs
-$(BUNDLE_NAME)_FILES = Preferences.m SavedSettings.m
+$(BUNDLE_NAME)_FILES = Preferences.m SavedSettings.m Sub.m
 $(BUNDLE_NAME)_INSTALL_PATH = /Library/PreferenceBundles
 $(BUNDLE_NAME)_FRAMEWORKS = UIKit
 $(BUNDLE_NAME)_PRIVATE_FRAMEWORKS = Preferences
