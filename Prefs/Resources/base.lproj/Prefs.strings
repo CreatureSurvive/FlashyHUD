@@ -24,6 +24,8 @@
   "OPACITY" = "Opacity";
   "DISABLE_ANIMATIONS" = "Disable animations";
   "PRESET" = "Saved settings";
+  "BEHAVIOR" = "Behavior";
+  "HAPTIC_FEEDBACK" = "Haptic feedback";
 
   "SOURCE_CODE" = "Source code";
   "DONATE_TO_NEPETA" = "Donate to Nepeta";

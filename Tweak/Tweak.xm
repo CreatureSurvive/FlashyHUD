@@ -1,5 +1,6 @@
 #import <Cephei/HBPreferences.h>
 #import <libcolorpicker.h>
+#import <AudioToolbox/AudioToolbox.h>
 #import "Tweak.h"
 
 HBPreferences *preferences;
@@ -12,6 +13,7 @@ BOOL backgroundShadow = true;
 BOOL inverted = false;
 BOOL gradient = false;
 BOOL background = true;
+BOOL hapticFeedback = true;
 NSInteger location = 0; // 0: top; 1: right; 2: bottom; 3: left
 CGFloat thickness = 5;
 CGFloat size = 1.0;
@@ -241,7 +243,9 @@ CGPoint getEndPoint() {
     %orig;
 
     CGRect bounds = [[UIScreen mainScreen] bounds];
-    self.flhLayer.frame = getFrameForProgress([self flhRealProgress], bounds);
+    float progress = [self flhRealProgress];
+    self.flhLayer.frame = getFrameForProgress(progress, bounds);
+    if (hapticFeedback && (progress == 0.0 || progress == 1.0)) AudioServicesPlaySystemSound(1519);
 }
 
 %end
@@ -323,6 +327,7 @@ void reloadColors() {
 
     [preferences registerBool:&enabled default:YES forKey:@"Enabled"];
     [preferences registerBool:&hasShadow default:YES forKey:@"HasShadow"];
+    [preferences registerBool:&hapticFeedback default:YES forKey:@"HapticFeedback"];
     [preferences registerBool:&backgroundShadow default:YES forKey:@"BackgroundShadow"];
     [preferences registerBool:&background default:YES forKey:@"Background"];
     [preferences registerBool:&inverted default:NO forKey:@"Inverted"];

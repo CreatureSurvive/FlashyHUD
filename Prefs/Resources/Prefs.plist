@@ -79,6 +79,13 @@
 			<key>PostNotification</key>
 			<string>me.nepeta.flashyhud/ReloadPrefs</string>
 		</dict>
+		
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>BEHAVIOR</string>
+		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
@@ -95,6 +102,23 @@
 			<key>PostNotification</key>
 			<string>me.nepeta.flashyhud/ReloadPrefs</string>
 		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>me.nepeta.flashyhud</string>
+			<key>label</key>
+			<string>HAPTIC_FEEDBACK</string>
+			<key>key</key>
+			<string>HapticFeedback</string>
+			<key>alternateColors</key>
+			<true/>
+			<key>PostNotification</key>
+			<string>me.nepeta.flashyhud/ReloadPrefs</string>
+		</dict>
+
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
