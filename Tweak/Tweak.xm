@@ -17,6 +17,7 @@ BOOL background = true;
 BOOL knob = false;
 BOOL hapticFeedback = true;
 BOOL enableOnLockscreen = false;
+BOOL touchControls = false;
 NSInteger location = 0; // 0: top; 1: right; 2: bottom; 3: left
 CGFloat thickness = 5;
 CGFloat knobThickness = 12;
@@ -34,12 +35,18 @@ UIColor *mediaColor = nil;
 UIColor *ringerColor = nil;
 UIColor *gradientColor = nil;
 UIColor *backgroundColor = nil;
+
+BOOL tempDisableAnimations = false;
+BOOL preventAddingDelay = false;
+BOOL fadingOrHidden = false;
 UIView *lastHUD = nil;
+double hideDelay = 0.5;
+float lastProgress = -1.0;
 
 @implementation FLHGradientLayer
 
 - (id<CAAction>)actionForKey:(NSString *)event {
-    if (disableAnimations) return nil;
+    if (disableAnimations || tempDisableAnimations) return nil;
     return [super actionForKey:event];
 }
 
@@ -189,11 +196,32 @@ CGPoint getEndPoint() {
 
 %group FlashyHUD
 
+%hook SBHUDController
+
+-(void)hideHUDView {
+    fadingOrHidden = true;
+    if (disableAnimations) [lastHUD setAlpha:0.01];
+    lastProgress = -1.0;
+    %orig;
+}
+
+-(void)presentHUDView:(id)arg1 autoDismissWithDelay:(double)arg2 {
+    %orig(arg1, -1.0); //-1.0 = stops it from dismissing
+    fadingOrHidden = false;
+    
+    if (preventAddingDelay) return;
+    [NSObject cancelPreviousPerformRequestsWithTarget:[%c(SBHUDController) sharedHUDController] selector:@selector(hideHUDView) object:[%c(SBHUDController) sharedHUDController]];
+    [[%c(SBHUDController) sharedHUDController] performSelector:@selector(hideHUDView) withObject:[%c(SBHUDController) sharedHUDController] afterDelay:hideDelay];
+}
+
+%end
+
 %hook SBHUDView
 
 %property (nonatomic, retain) FLHGradientLayer *flhLayer;
 %property (nonatomic, retain) FLHGradientLayer *flhBackgroundLayer;
 %property (nonatomic, retain) FLHGradientLayer *flhKnobLayer;
+%property (nonatomic, assign) CGRect flhFullFrame;
 
 %new
 -(float)flhRealProgress {
@@ -202,6 +230,61 @@ CGPoint getEndPoint() {
     }
 
     return self.progress;
+}
+
+-(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    if (!touchControls) {
+        %orig;
+        return;
+    }
+
+    if ([self isKindOfClass:%c(SBRingerHUDView)] || ([self respondsToSelector:@selector(mode)] && [((SBVolumeHUDView *)self) mode] == 1)) {
+        %orig;
+        return;
+    }
+
+    if (fadingOrHidden) return;
+
+    tempDisableAnimations = true;
+
+    [NSObject cancelPreviousPerformRequestsWithTarget:[%c(SBHUDController) sharedHUDController] selector:@selector(hideHUDView) object:[%c(SBHUDController) sharedHUDController]];
+    
+    CGPoint point = [[touches anyObject] locationInView:self];
+    BOOL vertical = (location == 1 || location == 3);
+    BOOL endIsMax = (vertical == inverted);
+    
+    float newProgress = 0;
+    CGFloat length = 0;
+    CGFloat rpl = 0;
+
+    if (vertical) {
+        length = self.flhFullFrame.size.height;
+        rpl = self.flhFullFrame.origin.y - point.y;
+    } else {
+        length = self.flhFullFrame.size.width;
+        rpl = self.flhFullFrame.origin.x - point.x;
+    }
+
+    rpl += length;
+
+    if (rpl < 0) rpl = 0;
+    if (rpl > length) rpl = length;
+
+    newProgress = (float) (rpl/length);
+    if (endIsMax) newProgress = 1 - newProgress;
+
+    [self setProgress:newProgress];
+    preventAddingDelay = true;
+}
+
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    if (fadingOrHidden) return;
+    [[%c(VolumeControl) sharedVolumeControl] setMediaVolume:self.progress];
+    [NSObject cancelPreviousPerformRequestsWithTarget:[%c(SBHUDController) sharedHUDController] selector:@selector(hideHUDView) object:[%c(SBHUDController) sharedHUDController]];
+    [[%c(SBHUDController) sharedHUDController] performSelector:@selector(hideHUDView) withObject:[%c(SBHUDController) sharedHUDController] afterDelay:hideDelay];
+
+    preventAddingDelay = false;
+    tempDisableAnimations = false;
 }
 
 -(void)layoutSubviews {
@@ -217,6 +300,7 @@ CGPoint getEndPoint() {
     CGRect bounds = [[UIScreen mainScreen] bounds];
     self.frame = bounds;
     self.alpha = opacity;
+    self.flhFullFrame = getFrameForProgress(1.0, bounds, 0.0);
 
     if (!self.flhBackgroundLayer) {
         self.layer.sublayers = nil;
@@ -313,12 +397,18 @@ CGPoint getEndPoint() {
     CGRect bounds = [[UIScreen mainScreen] bounds];
     float progress = [self flhRealProgress];
     self.flhLayer.frame = getFrameForProgress(progress, bounds, 0.0);
-    if (hapticFeedback && (progress == 0.0 || progress == 1.0)) AudioServicesPlaySystemSound(1519);
+    if (hapticFeedback && (progress == 0.0 || progress == 1.0) && lastProgress != progress) AudioServicesPlaySystemSound(1519);
+    lastProgress = progress;
 }
 
 %end
 
 %hook SBHUDWindow
+
+-(BOOL)_ignoresHitTest {
+    if (touchControls) return NO;
+    return %orig;
+}
 
 -(void)setHidden:(BOOL)hidden {
     if (hidden == self.hidden) return;
@@ -335,6 +425,16 @@ CGPoint getEndPoint() {
     [UIView animateWithDuration:0.15 delay:0 options:UIViewAnimationOptionCurveLinear animations:^{
         self.alpha = 1.0;
     } completion:nil];
+}
+
+-(id)hitTest:(CGPoint)arg1 withEvent:(id)arg2 {
+    if (!touchControls) return nil;
+
+    if (CGRectContainsPoint([(SBHUDView*)lastHUD flhBackgroundLayer].frame, arg1)) {
+        return lastHUD;
+    }
+
+    return nil;
 }
 
 %end
@@ -413,14 +513,11 @@ void reloadColors() {
 
     [preferences registerBool:&enabled default:YES forKey:@"Enabled"];
     [preferences registerBool:&hasShadow default:YES forKey:@"HasShadow"];
-    [preferences registerBool:&hapticFeedback default:YES forKey:@"HapticFeedback"];
-    [preferences registerBool:&enableOnLockscreen default:NO forKey:@"EnableOnLockscreen"];
     [preferences registerBool:&backgroundShadow default:YES forKey:@"BackgroundShadow"];
     [preferences registerBool:&background default:YES forKey:@"Background"];
     [preferences registerBool:&backgroundCornerRadiusEnabled default:NO forKey:@"BackgroundCornerRadiusEnabled"];
     [preferences registerBool:&inverted default:NO forKey:@"Inverted"];
     [preferences registerBool:&gradient default:NO forKey:@"Gradient"];
-    [preferences registerBool:&disableAnimations default:NO forKey:@"DisableAnimations"];
     [preferences registerInteger:&location default:0 forKey:@"Location"];
     [preferences registerFloat:&thickness default:5.0 forKey:@"Thickness"];
     [preferences registerFloat:&size default:1.0 forKey:@"Size"];
@@ -436,6 +533,11 @@ void reloadColors() {
     [preferences registerBool:&knobShadow default:YES forKey:@"KnobShadow"];
     [preferences registerFloat:&knobThickness default:12.0 forKey:@"KnobThickness"];
     [preferences registerFloat:&knobCornerRadius default:0.0 forKey:@"KnobCornerRadius"];
+
+    [preferences registerBool:&touchControls default:NO forKey:@"TouchControls"];
+    [preferences registerBool:&disableAnimations default:NO forKey:@"DisableAnimations"];
+    [preferences registerBool:&hapticFeedback default:YES forKey:@"HapticFeedback"];
+    [preferences registerBool:&enableOnLockscreen default:NO forKey:@"EnableOnLockscreen"];
 
     mediaColor = [UIColor whiteColor];
     ringerColor = [UIColor whiteColor];

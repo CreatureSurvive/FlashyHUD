@@ -138,6 +138,22 @@
 			<key>defaults</key>
 			<string>me.nepeta.flashyhud</string>
 			<key>label</key>
+			<string>TOUCH_CONTROLS</string>
+			<key>key</key>
+			<string>TouchControls</string>
+			<key>alternateColors</key>
+			<true/>
+			<key>PostNotification</key>
+			<string>me.nepeta.flashyhud/ReloadPrefs</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>me.nepeta.flashyhud</string>
+			<key>label</key>
 			<string>DISABLE_ANIMATIONS</string>
 			<key>key</key>
 			<string>DisableAnimations</string>
