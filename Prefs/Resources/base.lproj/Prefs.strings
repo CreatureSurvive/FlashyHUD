@@ -4,6 +4,7 @@
   "HUD" = "HUD";
   "BACKGROUND" = "Background";
   "LAYOUT" = "Layout";
+  "KNOB" = "Knob";
 
   "SOURCE_CODE" = "Source code";
   "DONATE_TO_NEPETA" = "Donate to Nepeta";

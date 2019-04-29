@@ -10,13 +10,17 @@ BOOL enabled = true;
 BOOL disableAnimations = false;
 BOOL hasShadow = true;
 BOOL backgroundShadow = true;
+BOOL knobShadow = true;
 BOOL inverted = false;
 BOOL gradient = false;
 BOOL background = true;
+BOOL knob = false;
 BOOL hapticFeedback = true;
 BOOL enableOnLockscreen = false;
 NSInteger location = 0; // 0: top; 1: right; 2: bottom; 3: left
 CGFloat thickness = 5;
+CGFloat knobThickness = 12;
+CGFloat knobCornerRadius = 0;
 CGFloat size = 1.0;
 CGFloat offset = 0;
 CGFloat horizontalOffset = 0;
@@ -110,6 +114,39 @@ CGRect getFrameForProgress(float progress, CGRect bounds, CGFloat padding) {
     }
 }
 
+CGPoint getBarTip(float progress, CGRect bounds) {
+    CGRect frame = getFrameForProgress(progress, bounds, 0);
+
+    if (inverted) {
+        switch (location) {
+            case 0: //top
+                return CGPointMake(frame.origin.x, frame.origin.y + frame.size.height/2.0);
+            case 1: //right
+                return CGPointMake(frame.origin.x + frame.size.width/2.0, frame.origin.y + frame.size.height);
+            case 2: //bottom
+                return CGPointMake(frame.origin.x, frame.origin.y + frame.size.height/2.0);
+            default: //left
+                return CGPointMake(frame.origin.x + frame.size.width/2.0, frame.origin.y + frame.size.height);
+        }
+    }
+
+    switch (location) {
+        case 0: //top
+            return CGPointMake(frame.origin.x + frame.size.width, frame.origin.y + frame.size.height/2.0);
+        case 1: //right
+            return CGPointMake(frame.origin.x + frame.size.width/2.0, frame.origin.y);
+        case 2: //bottom
+            return CGPointMake(frame.origin.x + frame.size.width, frame.origin.y + frame.size.height/2.0);
+        default: //left
+            return CGPointMake(frame.origin.x + frame.size.width/2.0, frame.origin.y);
+    }
+}
+
+CGRect getKnobFrame(float progress, CGRect bounds) {
+    CGPoint tip = getBarTip(progress, bounds);
+    return CGRectMake(tip.x - knobThickness/2.0, tip.y - knobThickness/2.0, knobThickness, knobThickness);
+}
+
 CGSize getShadowOffset(CGFloat padding) {
     CGFloat width = thickness + padding * 2.0;
     switch (location) {
@@ -156,6 +193,7 @@ CGPoint getEndPoint() {
 
 %property (nonatomic, retain) FLHGradientLayer *flhLayer;
 %property (nonatomic, retain) FLHGradientLayer *flhBackgroundLayer;
+%property (nonatomic, retain) FLHGradientLayer *flhKnobLayer;
 
 %new
 -(float)flhRealProgress {
@@ -196,6 +234,13 @@ CGPoint getEndPoint() {
         [self.layer addSublayer:self.flhLayer];
     }
 
+    if (!self.flhKnobLayer) {
+        self.flhKnobLayer = [[FLHGradientLayer alloc] init];
+        self.flhKnobLayer.masksToBounds = NO;
+ 
+        [self.layer addSublayer:self.flhKnobLayer];
+    }
+
     self.flhBackgroundLayer.frame = getFrameForProgress(1.0, bounds, backgroundPadding);
     if (background) {
         self.flhBackgroundLayer.backgroundColor = backgroundColor.CGColor;
@@ -211,6 +256,14 @@ CGPoint getEndPoint() {
 
     self.flhLayer.cornerRadius = cornerRadius;
     self.flhBackgroundLayer.cornerRadius = (backgroundCornerRadiusEnabled) ? backgroundCornerRadius : cornerRadius;
+
+    if (knob) {
+        self.flhKnobLayer.backgroundColor = color.CGColor;
+    } else {
+        self.flhKnobLayer.backgroundColor = [UIColor clearColor].CGColor;
+    }
+    self.flhKnobLayer.frame = getKnobFrame([self flhRealProgress], bounds);
+    self.flhKnobLayer.cornerRadius = knobCornerRadius; //TODO
 
     if (hasShadow) {
         self.flhLayer.shadowOpacity = 0.5;
@@ -228,6 +281,15 @@ CGPoint getEndPoint() {
         self.flhBackgroundLayer.shadowOffset = getShadowOffset(backgroundPadding);
     } else {
         self.flhBackgroundLayer.shadowOpacity = 0;
+    }
+
+    if (knobShadow) {
+        self.flhKnobLayer.shadowOpacity = 0.5;
+        self.flhKnobLayer.shadowRadius = knobThickness;
+        self.flhKnobLayer.shadowColor = backgroundColor.CGColor;
+        self.flhKnobLayer.shadowOffset = CGSizeMake(knobThickness/2.0, knobThickness/2.0);
+    } else {
+        self.flhKnobLayer.shadowOpacity = 0;
     }
 
     if (gradient) {
@@ -369,6 +431,11 @@ void reloadColors() {
     [preferences registerFloat:&backgroundCornerRadius default:0.0 forKey:@"BackgroundCornerRadius"];
     [preferences registerFloat:&backgroundPadding default:0.0 forKey:@"BackgroundPadding"];
     [preferences registerFloat:&opacity default:1.0 forKey:@"Opacity"];
+
+    [preferences registerBool:&knob default:NO forKey:@"Knob"];
+    [preferences registerBool:&knobShadow default:YES forKey:@"KnobShadow"];
+    [preferences registerFloat:&knobThickness default:12.0 forKey:@"KnobThickness"];
+    [preferences registerFloat:&knobCornerRadius default:0.0 forKey:@"KnobCornerRadius"];
 
     mediaColor = [UIColor whiteColor];
     ringerColor = [UIColor whiteColor];

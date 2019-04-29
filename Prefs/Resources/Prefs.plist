@@ -70,6 +70,16 @@
 			<key>FLHSub</key>
 			<string>Background</string>
 		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>label</key>
+			<string>KNOB</string>
+			<key>detail</key>
+			<string>FLHSubPrefsListController</string>
+			<key>FLHSub</key>
+			<string>Knob</string>
+		</dict>
 
 		<!-- Credits -->
 		<dict>

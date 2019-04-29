@@ -11,6 +11,7 @@
 @property (assign,nonatomic) float progress;
 @property (nonatomic, retain) FLHGradientLayer *flhLayer;
 @property (nonatomic, retain) FLHGradientLayer *flhBackgroundLayer;
+@property (nonatomic, retain) FLHGradientLayer *flhKnobLayer;
 -(void)setProgress:(float)arg1 ;
 -(float)flhRealProgress;
 
