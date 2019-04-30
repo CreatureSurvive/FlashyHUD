@@ -287,9 +287,7 @@ CGPoint getEndPoint() {
 }
 
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    if (fadingOrHidden) {
-        preventOut = false;
-    }
+    preventOut = false;
     [[%c(VolumeControl) sharedVolumeControl] setMediaVolume:self.progress];
     [NSObject cancelPreviousPerformRequestsWithTarget:[%c(SBHUDController) sharedHUDController] selector:@selector(hideHUDView) object:[%c(SBHUDController) sharedHUDController]];
     [[%c(SBHUDController) sharedHUDController] performSelector:@selector(hideHUDView) withObject:[%c(SBHUDController) sharedHUDController] afterDelay:hideDelay];
