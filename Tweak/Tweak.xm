@@ -287,6 +287,16 @@ CGPoint getEndPoint() {
 }
 
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    if (!touchControls) {
+        %orig;
+        return;
+    }
+
+    if ([self isKindOfClass:%c(SBRingerHUDView)] || ([self respondsToSelector:@selector(mode)] && [((SBVolumeHUDView *)self) mode] == 1)) {
+        %orig;
+        return;
+    }
+
     preventOut = false;
     [[%c(VolumeControl) sharedVolumeControl] setMediaVolume:self.progress];
     [NSObject cancelPreviousPerformRequestsWithTarget:[%c(SBHUDController) sharedHUDController] selector:@selector(hideHUDView) object:[%c(SBHUDController) sharedHUDController]];
@@ -294,6 +304,15 @@ CGPoint getEndPoint() {
 
     preventAddingDelay = false;
     tempDisableAnimations = false;
+}
+
+-(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+    if (!touchControls) {
+        %orig;
+        return;
+    }
+
+    [self touchesEnded:touches withEvent:event];
 }
 
 -(void)layoutSubviews {
