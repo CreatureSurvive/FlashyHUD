@@ -394,9 +394,7 @@ CGPoint getEndPoint() {
 -(void)setProgress:(float)arg1 {
     %orig;
 
-    CGRect bounds = [[UIScreen mainScreen] bounds];
     float progress = [self flhRealProgress];
-    self.flhLayer.frame = getFrameForProgress(progress, bounds, 0.0);
     if (hapticFeedback && (progress == 0.0 || progress == 1.0) && lastProgress != progress) AudioServicesPlaySystemSound(1519);
     lastProgress = progress;
 }
