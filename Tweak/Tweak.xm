@@ -39,6 +39,7 @@ UIColor *backgroundColor = nil;
 BOOL tempDisableAnimations = false;
 BOOL preventAddingDelay = false;
 BOOL fadingOrHidden = false;
+BOOL preventOut = false;
 UIView *lastHUD = nil;
 double hideDelay = 0.5;
 float lastProgress = -1.0;
@@ -198,6 +199,11 @@ CGPoint getEndPoint() {
 
 %hook SBHUDController
 
+-(void)_tearDown {
+    if (!preventOut) %orig;
+    preventOut = false;
+}
+
 -(void)hideHUDView {
     fadingOrHidden = true;
     if (disableAnimations) [lastHUD setAlpha:0.01];
@@ -243,8 +249,6 @@ CGPoint getEndPoint() {
         return;
     }
 
-    if (fadingOrHidden) return;
-
     tempDisableAnimations = true;
 
     [NSObject cancelPreviousPerformRequestsWithTarget:[%c(SBHUDController) sharedHUDController] selector:@selector(hideHUDView) object:[%c(SBHUDController) sharedHUDController]];
@@ -275,10 +279,17 @@ CGPoint getEndPoint() {
 
     [self setProgress:newProgress];
     preventAddingDelay = true;
+
+    if (fadingOrHidden) {
+        preventOut = true;
+        [[%c(VolumeControl) sharedVolumeControl] setMediaVolume:self.progress];
+    }
 }
 
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    if (fadingOrHidden) return;
+    if (fadingOrHidden) {
+        preventOut = false;
+    }
     [[%c(VolumeControl) sharedVolumeControl] setMediaVolume:self.progress];
     [NSObject cancelPreviousPerformRequestsWithTarget:[%c(SBHUDController) sharedHUDController] selector:@selector(hideHUDView) object:[%c(SBHUDController) sharedHUDController]];
     [[%c(SBHUDController) sharedHUDController] performSelector:@selector(hideHUDView) withObject:[%c(SBHUDController) sharedHUDController] afterDelay:hideDelay];
