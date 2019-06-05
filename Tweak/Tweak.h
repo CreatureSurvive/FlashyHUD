@@ -2,6 +2,35 @@
 #import <UIKit/UIKit.h>
 #import <UIKit/UIControl.h>
 
+@interface _UIBackdropViewSettings : NSObject
+
+@property (nonatomic, retain) UIColor * colorTint;
+@property (nonatomic, assign) double blurRadius;
+
++(instancetype)settingsForStyle:(NSInteger)style;
+
+@end
+
+@interface _UIBackdropView : UIView
+
+@property (nonatomic, assign) NSInteger style;   
+
+-(instancetype)initWithStyle:(NSInteger)style;
+-(void)transitionToStyle:(NSInteger)style;
+-(void)transitionToSettings:(_UIBackdropViewSettings *)settings;
+-(void)transitionIncrementallyToStyle:(NSInteger)style weighting:(double)weight;
+-(void)transitionIncrementallyToSettings:(_UIBackdropViewSettings *)settings weighting:(double)weight;
+-(void)setBlurRadius:(double)radius;
+-(void)_setContinuousCornerRadius:(double)radius;
+
+@end
+
+@interface CALayer (Private)
+
+@property (nonatomic, assign) BOOL continuousCorners;
+
+@end
+
 @interface FLHGradientLayer : CAGradientLayer
 
 @end
@@ -12,6 +41,7 @@
 @property (nonatomic, retain) FLHGradientLayer *flhLayer;
 @property (nonatomic, retain) FLHGradientLayer *flhBackgroundLayer;
 @property (nonatomic, retain) FLHGradientLayer *flhKnobLayer;
+@property (nonatomic, retain) _UIBackdropView *flhBackdropBlur;
 @property (nonatomic, assign) CGRect flhFullFrame;
 
 -(void)setProgress:(float)arg1 ;

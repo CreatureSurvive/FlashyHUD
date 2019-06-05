@@ -18,4 +18,5 @@
   "BEHAVIOR" = "Behavior";
   "HAPTIC_FEEDBACK" = "Haptic feedback";
   "ENABLE_ON_LOCKSCREEN" = "Enable on lockscreen";
+  "HIDE_DELAY" = "Hide delay";
 }

@@ -24,7 +24,7 @@
 			<key>min</key>
 			<integer>1</integer>
 			<key>max</key>
-			<integer>20</integer>
+			<integer>60</integer>
 			<key>showValue</key>
 			<true/>
 			<key>isSegmented</key>
@@ -140,7 +140,7 @@
 			<key>min</key>
 			<integer>0</integer>
 			<key>max</key>
-			<integer>10</integer>
+			<integer>30</integer>
 			<key>showValue</key>
 			<true/>
 			<key>isSegmented</key>

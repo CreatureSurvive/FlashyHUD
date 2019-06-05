@@ -199,6 +199,35 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
+			<string>HIDE_DELAY</string>
+			<key>isStaticText</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>default</key>
+			<real>0.25</real>
+			<key>defaults</key>
+			<string>me.nepeta.flashyhud</string>
+			<key>key</key>
+			<string>HideDelay</string>
+			<key>min</key>
+			<real>0.5</real>
+			<key>max</key>
+			<real>20</real>
+			<key>showValue</key>
+			<true/>
+			<key>isSegmented</key>
+			<false/>
+			<key>PostNotification</key>
+			<string>me.nepeta.flashyhud/ReloadPrefs</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
 			<string>GRADIENT</string>
 			<key>isStaticText</key>
 			<true/>

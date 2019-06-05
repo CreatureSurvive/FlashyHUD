@@ -18,7 +18,9 @@ BOOL knob = false;
 BOOL hapticFeedback = true;
 BOOL enableOnLockscreen = false;
 BOOL touchControls = false;
+BOOL blurEnabled = false;
 NSInteger location = 0; // 0: top; 1: right; 2: bottom; 3: left
+NSInteger blurStyle = 2;
 CGFloat thickness = 5;
 CGFloat knobThickness = 12;
 CGFloat knobCornerRadius = 0;
@@ -30,6 +32,7 @@ CGFloat cornerRadius = 0;
 CGFloat opacity = 1.0;
 CGFloat backgroundPadding = 0;
 CGFloat backgroundCornerRadius = 0;
+CGFloat blurRadius = 30;
 BOOL backgroundCornerRadiusEnabled = false;
 UIColor *mediaColor = nil;
 UIColor *ringerColor = nil;
@@ -40,8 +43,8 @@ BOOL tempDisableAnimations = false;
 BOOL preventAddingDelay = false;
 BOOL fadingOrHidden = false;
 BOOL preventOut = false;
-UIView *lastHUD = nil;
-double hideDelay = 0.5;
+SBHUDView *lastHUD = nil;
+CGFloat hideDelay = 0.5;
 float lastProgress = -1.0;
 
 @implementation FLHGradientLayer
@@ -227,6 +230,7 @@ CGPoint getEndPoint() {
 %property (nonatomic, retain) FLHGradientLayer *flhLayer;
 %property (nonatomic, retain) FLHGradientLayer *flhBackgroundLayer;
 %property (nonatomic, retain) FLHGradientLayer *flhKnobLayer;
+%property (nonatomic, retain) _UIBackdropView *flhBackdropBlur;
 %property (nonatomic, assign) CGRect flhFullFrame;
 
 %new
@@ -330,11 +334,18 @@ CGPoint getEndPoint() {
     self.alpha = opacity;
     self.flhFullFrame = getFrameForProgress(1.0, bounds, 0.0);
 
+    if (!self.flhBackdropBlur) {
+        self.flhBackdropBlur = [[_UIBackdropView alloc] initWithStyle:-2];
+        self.flhBackdropBlur.layer.masksToBounds = YES;
+
+        [self.superview insertSubview:self.flhBackdropBlur atIndex:0];
+    }
+
     if (!self.flhBackgroundLayer) {
         self.layer.sublayers = nil;
         self.layer.masksToBounds = NO;
         self.flhBackgroundLayer = [[FLHGradientLayer alloc] init];
-        self.flhBackgroundLayer.masksToBounds = NO;
+        self.flhBackgroundLayer.masksToBounds = true;
  
         [self.layer addSublayer:self.flhBackgroundLayer];
     }
@@ -343,7 +354,7 @@ CGPoint getEndPoint() {
         self.flhLayer = [[FLHGradientLayer alloc] init];
         self.flhLayer.masksToBounds = NO;
  
-        [self.layer addSublayer:self.flhLayer];
+        [self.flhBackgroundLayer addSublayer:self.flhLayer];
     }
 
     if (!self.flhKnobLayer) {
@@ -354,20 +365,34 @@ CGPoint getEndPoint() {
     }
 
     self.flhBackgroundLayer.frame = getFrameForProgress(1.0, bounds, backgroundPadding);
+    self.flhBackdropBlur.frame = self.flhBackgroundLayer.frame;
     if (background) {
         self.flhBackgroundLayer.backgroundColor = backgroundColor.CGColor;
+        if (blurEnabled) {
+            _UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:blurStyle];
+            settings.blurRadius = blurRadius;
+            [self.flhBackdropBlur transitionToSettings:settings];
+        }
     } else {
         self.flhBackgroundLayer.backgroundColor = [UIColor clearColor].CGColor;
+        [self.flhBackdropBlur transitionToStyle:-2];
     }
 
     self.flhLayer.backgroundColor = color.CGColor;
-
-    self.flhLayer.frame = getFrameForProgress([self flhRealProgress], bounds, 0.0);
+    CGRect fillFrame = getFrameForProgress([self flhRealProgress], bounds, 0.0);
+    fillFrame.origin = CGPointZero;
+    self.flhLayer.frame = fillFrame;
     self.flhLayer.startPoint = getStartPoint();
     self.flhLayer.endPoint = getEndPoint();
 
+    self.flhLayer.continuousCorners = true;
+    self.flhBackgroundLayer.continuousCorners = true;
+    self.flhBackdropBlur.layer.continuousCorners = true;
+    self.flhKnobLayer.continuousCorners = true;
+
     self.flhLayer.cornerRadius = cornerRadius;
     self.flhBackgroundLayer.cornerRadius = (backgroundCornerRadiusEnabled) ? backgroundCornerRadius : cornerRadius;
+    [self.flhBackdropBlur _setContinuousCornerRadius:self.flhBackgroundLayer.cornerRadius];
 
     if (knob) {
         self.flhKnobLayer.backgroundColor = color.CGColor;
@@ -417,6 +442,12 @@ CGPoint getEndPoint() {
 
 -(void)insertSubview:(id)xxx atIndex:(int)x {
     //noop
+}
+
+-(void)setAlpha:(double)alpha {
+    %orig;
+
+    self.flhBackdropBlur.alpha = (alpha < opacity) ? alpha : 1;
 }
 
 -(void)setProgress:(float)arg1 {
@@ -554,6 +585,9 @@ void reloadColors() {
     [preferences registerFloat:&backgroundCornerRadius default:0.0 forKey:@"BackgroundCornerRadius"];
     [preferences registerFloat:&backgroundPadding default:0.0 forKey:@"BackgroundPadding"];
     [preferences registerFloat:&opacity default:1.0 forKey:@"Opacity"];
+    [preferences registerInteger:&blurStyle default:2 forKey:@"BlurStyle"];
+    [preferences registerBool:&blurEnabled default:YES forKey:@"BlurEnabled"];
+    [preferences registerFloat:&blurRadius default:30.0 forKey:@"BlurRadius"];
 
     [preferences registerBool:&knob default:NO forKey:@"Knob"];
     [preferences registerBool:&knobShadow default:YES forKey:@"KnobShadow"];
@@ -564,6 +598,7 @@ void reloadColors() {
     [preferences registerBool:&disableAnimations default:NO forKey:@"DisableAnimations"];
     [preferences registerBool:&hapticFeedback default:YES forKey:@"HapticFeedback"];
     [preferences registerBool:&enableOnLockscreen default:NO forKey:@"EnableOnLockscreen"];
+    [preferences registerFloat:&hideDelay default:0.5 forKey:@"HideDelay"];
 
     mediaColor = [UIColor whiteColor];
     ringerColor = [UIColor whiteColor];
