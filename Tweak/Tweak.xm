@@ -20,7 +20,7 @@ BOOL enableOnLockscreen = false;
 BOOL touchControls = false;
 BOOL blurEnabled = false;
 NSInteger location = 0; // 0: top; 1: right; 2: bottom; 3: left
-NSInteger blurStyle = 2;
+NSInteger blurStyle = 2030;
 CGFloat thickness = 5;
 CGFloat knobThickness = 12;
 CGFloat knobCornerRadius = 0;
@@ -38,11 +38,13 @@ UIColor *mediaColor = nil;
 UIColor *ringerColor = nil;
 UIColor *gradientColor = nil;
 UIColor *backgroundColor = nil;
+NSUInteger lastColorHash = 0x0;
 
 BOOL tempDisableAnimations = false;
 BOOL preventAddingDelay = false;
 BOOL fadingOrHidden = false;
 BOOL preventOut = false;
+BOOL needsCompleteUpdate = false;
 SBHUDView *lastHUD = nil;
 CGFloat hideDelay = 0.5;
 float lastProgress = -1.0;
@@ -56,7 +58,27 @@ float lastProgress = -1.0;
 
 @end
 
-CGRect getFrameForProgress(float progress, CGRect bounds, CGFloat padding) {
+CGRect getFrameForFillProgress(float progress, CGRect bounds, CGFloat padding) {
+    UIEdgeInsets insets;
+    CGFloat fill;
+    switch (location) {
+        case 0: //top
+        case 2: //bottom
+            fill = ((bounds.size.width - padding) * (1.0 - progress)) + (padding * progress);
+            insets = inverted ? UIEdgeInsetsMake(padding, fill, padding, padding) : 
+                                UIEdgeInsetsMake(padding, padding, padding, fill);
+            break;
+        default: //left right
+            fill = ((bounds.size.height - padding) * (1.0 - progress)) + (padding * progress);
+            insets = inverted ? UIEdgeInsetsMake(padding, padding, fill, padding) : 
+                                UIEdgeInsetsMake(fill, padding, padding, padding);
+            break;
+    }
+
+    return UIEdgeInsetsInsetRect(bounds, insets);
+}
+
+CGRect getFrameForBackground(CGRect bounds) {
     CGFloat fullLength = 0;
     CGFloat x = bounds.size.width * horizontalOffset;
     CGFloat y = bounds.size.height * verticalOffset;
@@ -72,90 +94,48 @@ CGRect getFrameForProgress(float progress, CGRect bounds, CGFloat padding) {
     }
 
 
-    CGFloat length = fullLength * size + padding * 2.0;
-    CGFloat width = thickness + padding * 2.0;
+    CGFloat length = fullLength * size;
     CGFloat sizeOffset = (fullLength - length) / 2.0;
 
-    if (inverted) {
-        switch (location) {
-            case 0: //top
-                return CGRectMake(x + length + sizeOffset - length * progress,
-                                y + offset - padding,
-                                length * progress,
-                                width);
-            case 1: //right
-                return CGRectMake(x + bounds.size.width - width - offset + padding,
-                                y + sizeOffset,
-                                width,
-                                length * progress);
-            case 2: //bottom
-                return CGRectMake(x + length + sizeOffset - length * progress,
-                                y + bounds.size.height - width - offset + padding,
-                                length * progress,
-                                width);
-            default: //left
-                return CGRectMake(x + offset - padding,
-                                y + sizeOffset,
-                                width,
-                                length * progress);
-        }
-    }
-
     switch (location) {
         case 0: //top
             return CGRectMake(x + sizeOffset,
-                            y + offset - padding,
-                            length * progress,
-                            width);
+                            y + offset,
+                            length,
+                            thickness);
         case 1: //right
-            return CGRectMake(x + bounds.size.width - width - offset + padding,
-                            y + length + sizeOffset - length * progress,
-                            width,
-                            length * progress);
+            return CGRectMake(x + bounds.size.width - thickness - offset,
+                            y + length + sizeOffset - length,
+                            thickness,
+                            length);
         case 2: //bottom
             return CGRectMake(x + sizeOffset,
-                            y + bounds.size.height - width - offset + padding,
-                            length * progress,
-                            width);
+                            y + bounds.size.height - thickness - offset,
+                            length,
+                            thickness);
         default: //left
-            return CGRectMake(x + offset - padding,
-                            y + length + sizeOffset - length * progress,
-                            width,
-                            length * progress);
+            return CGRectMake(x + offset,
+                            y + length + sizeOffset - length,
+                            thickness,
+                            length);
     }
 }
 
-CGPoint getBarTip(float progress, CGRect bounds) {
-    CGRect frame = getFrameForProgress(progress, bounds, 0);
-
-    if (inverted) {
-        switch (location) {
-            case 0: //top
-                return CGPointMake(frame.origin.x, frame.origin.y + frame.size.height/2.0);
-            case 1: //right
-                return CGPointMake(frame.origin.x + frame.size.width/2.0, frame.origin.y + frame.size.height);
-            case 2: //bottom
-                return CGPointMake(frame.origin.x, frame.origin.y + frame.size.height/2.0);
-            default: //left
-                return CGPointMake(frame.origin.x + frame.size.width/2.0, frame.origin.y + frame.size.height);
-        }
-    }
-
+CGRect getKnobFrame(CGRect bounds, CALayer *parent, CALayer *fakeParent) {
+    CGPoint barTip;
     switch (location) {
         case 0: //top
-            return CGPointMake(frame.origin.x + frame.size.width, frame.origin.y + frame.size.height/2.0);
-        case 1: //right
-            return CGPointMake(frame.origin.x + frame.size.width/2.0, frame.origin.y);
         case 2: //bottom
-            return CGPointMake(frame.origin.x + frame.size.width, frame.origin.y + frame.size.height/2.0);
-        default: //left
-            return CGPointMake(frame.origin.x + frame.size.width/2.0, frame.origin.y);
+            barTip = inverted ? CGPointMake(0, CGRectGetMidY(bounds)):
+                                CGPointMake(CGRectGetWidth(bounds), CGRectGetMidY(bounds));
+            break;
+        default: //side
+            barTip = inverted ? CGPointMake(CGRectGetMidX(bounds), CGRectGetMaxY(bounds)):
+                                CGPointMake(CGRectGetMidX(bounds), 0);
+            break;
     }
-}
-
-CGRect getKnobFrame(float progress, CGRect bounds) {
-    CGPoint tip = getBarTip(progress, bounds);
-    return CGRectMake(tip.x - knobThickness/2.0, tip.y - knobThickness/2.0, knobThickness, knobThickness);
+    
+    return [fakeParent convertRect:CGRectMake(barTip.x - knobThickness/2.0, barTip.y - knobThickness/2.0, knobThickness, knobThickness) toLayer:parent];
 }
 
 CGSize getShadowOffset(CGFloat padding) {
@@ -325,115 +305,137 @@ CGPoint getEndPoint() {
     lastHUD = self;
 
     UIColor *color = mediaColor;
+    BOOL needsColorUpdate;
+
     if ([self isKindOfClass:%c(SBRingerHUDView)] || ([self respondsToSelector:@selector(mode)] && [((SBVolumeHUDView *)self) mode] == 1)) {
         color = ringerColor;
+    }
+
+    if ([color hash] != lastColorHash) {
+        lastColorHash = [color hash];
+        needsColorUpdate = YES;
     }
 
     CGRect bounds = [[UIScreen mainScreen] bounds];
     self.frame = bounds;
     self.alpha = opacity;
-    self.flhFullFrame = getFrameForProgress(1.0, bounds, 0.0);
 
     if (!self.flhBackdropBlur) {
+        needsCompleteUpdate = YES;
         self.flhBackdropBlur = [[_UIBackdropView alloc] initWithStyle:-2];
         self.flhBackdropBlur.layer.masksToBounds = YES;
+        self.flhBackdropBlur.layer.continuousCorners = YES;
 
         [self.superview insertSubview:self.flhBackdropBlur atIndex:0];
     }
 
     if (!self.flhBackgroundLayer) {
+        needsCompleteUpdate = YES;
         self.layer.sublayers = nil;
         self.layer.masksToBounds = NO;
         self.flhBackgroundLayer = [[FLHGradientLayer alloc] init];
-        self.flhBackgroundLayer.masksToBounds = true;
+        self.flhBackgroundLayer.masksToBounds = YES;
+        self.flhBackgroundLayer.continuousCorners = YES;
  
         [self.layer addSublayer:self.flhBackgroundLayer];
     }
 
     if (!self.flhLayer) {
+        needsCompleteUpdate = YES;
         self.flhLayer = [[FLHGradientLayer alloc] init];
         self.flhLayer.masksToBounds = NO;
+        self.flhLayer.continuousCorners = YES;
  
         [self.flhBackgroundLayer addSublayer:self.flhLayer];
     }
 
     if (!self.flhKnobLayer) {
+        needsCompleteUpdate = YES;
         self.flhKnobLayer = [[FLHGradientLayer alloc] init];
         self.flhKnobLayer.masksToBounds = NO;
+        self.flhKnobLayer.continuousCorners = YES;
  
         [self.layer addSublayer:self.flhKnobLayer];
     }
 
-    self.flhBackgroundLayer.frame = getFrameForProgress(1.0, bounds, backgroundPadding);
-    self.flhBackdropBlur.frame = self.flhBackgroundLayer.frame;
-    if (background) {
-        self.flhBackgroundLayer.backgroundColor = backgroundColor.CGColor;
-        if (blurEnabled) {
-            _UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:blurStyle];
-            settings.blurRadius = blurRadius;
-            [self.flhBackdropBlur transitionToSettings:settings];
+    if (needsCompleteUpdate) {
+        needsCompleteUpdate = NO;
+        needsColorUpdate = YES;
+
+
+        if (background) {
+            self.flhBackgroundLayer.backgroundColor = backgroundColor.CGColor;
+            if (blurEnabled) {
+                _UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:blurStyle];
+                settings.blurRadius = blurRadius;
+                [self.flhBackdropBlur transitionToSettings:settings];
+            }
+        } else {
+            self.flhBackgroundLayer.backgroundColor = UIColor.clearColor.CGColor;
+            [self.flhBackdropBlur transitionToStyle:-2];
         }
-    } else {
-        self.flhBackgroundLayer.backgroundColor = [UIColor clearColor].CGColor;
-        [self.flhBackdropBlur transitionToStyle:-2];
+        
+        self.flhBackgroundLayer.frame = getFrameForBackground(bounds);
+        self.flhBackdropBlur.frame = self.flhBackgroundLayer.frame;
+        self.flhFullFrame = UIEdgeInsetsInsetRect(self.flhBackgroundLayer.frame, UIEdgeInsetsMake(backgroundPadding, backgroundPadding, backgroundPadding, backgroundPadding));
+        
+        self.flhLayer.cornerRadius = cornerRadius;
+        self.flhBackgroundLayer.cornerRadius = (backgroundCornerRadiusEnabled) ? backgroundCornerRadius : cornerRadius;
+        [self.flhBackdropBlur _setContinuousCornerRadius:self.flhBackgroundLayer.cornerRadius];
+    
+        self.flhLayer.startPoint = getStartPoint();
+        self.flhLayer.endPoint = getEndPoint();
+
+        self.flhKnobLayer.cornerRadius = knobCornerRadius;
+
+        if (hasShadow) {
+            self.flhLayer.shadowOpacity = 0.5;
+            self.flhLayer.shadowRadius = thickness;
+            self.flhLayer.shadowOffset = getShadowOffset(0.0);
+        } else {
+            self.flhLayer.shadowOpacity = 0;
+        }
+
+        if (backgroundShadow) {
+            self.flhBackgroundLayer.shadowOpacity = 0.5;
+            self.flhBackgroundLayer.shadowRadius = thickness;
+            self.flhBackgroundLayer.shadowColor = backgroundColor.CGColor;
+            self.flhBackgroundLayer.shadowOffset = getShadowOffset(backgroundPadding);
+        } else {
+            self.flhBackgroundLayer.shadowOpacity = 0;
+        }
+
+        if (knobShadow) {
+            self.flhKnobLayer.shadowOpacity = 0.5;
+            self.flhKnobLayer.shadowRadius = knobThickness;
+            self.flhKnobLayer.shadowColor = backgroundColor.CGColor;
+            self.flhKnobLayer.shadowOffset = CGSizeMake(knobThickness/2.0, knobThickness/2.0);
+        } else {
+            self.flhKnobLayer.shadowOpacity = 0;
+        }
     }
 
-    self.flhLayer.backgroundColor = color.CGColor;
-    CGRect fillFrame = getFrameForProgress([self flhRealProgress], bounds, 0.0);
-    fillFrame.origin = CGPointZero;
-    self.flhLayer.frame = fillFrame;
-    self.flhLayer.startPoint = getStartPoint();
-    self.flhLayer.endPoint = getEndPoint();
+    if (needsColorUpdate) {
+        needsColorUpdate = NO;
 
-    self.flhLayer.continuousCorners = true;
-    self.flhBackgroundLayer.continuousCorners = true;
-    self.flhBackdropBlur.layer.continuousCorners = true;
-    self.flhKnobLayer.continuousCorners = true;
-
-    self.flhLayer.cornerRadius = cornerRadius;
-    self.flhBackgroundLayer.cornerRadius = (backgroundCornerRadiusEnabled) ? backgroundCornerRadius : cornerRadius;
-    [self.flhBackdropBlur _setContinuousCornerRadius:self.flhBackgroundLayer.cornerRadius];
-
-    if (knob) {
-        self.flhKnobLayer.backgroundColor = color.CGColor;
-    } else {
-        self.flhKnobLayer.backgroundColor = [UIColor clearColor].CGColor;
-    }
-    self.flhKnobLayer.frame = getKnobFrame([self flhRealProgress], bounds);
-    self.flhKnobLayer.cornerRadius = knobCornerRadius; //TODO
-
-    if (hasShadow) {
-        self.flhLayer.shadowOpacity = 0.5;
-        self.flhLayer.shadowRadius = thickness;
+        self.flhLayer.backgroundColor = color.CGColor;
         self.flhLayer.shadowColor = color.CGColor;
-        self.flhLayer.shadowOffset = getShadowOffset(0.0);
-    } else {
-        self.flhLayer.shadowOpacity = 0;
+
+        if (gradient) {
+            self.flhLayer.colors = @[(id)color.CGColor, (id)gradientColor.CGColor];
+        } else {
+            self.flhLayer.colors = nil;
+        }
+    
+        if (knob) {
+            self.flhKnobLayer.backgroundColor = color.CGColor;
+        } else {
+            self.flhKnobLayer.backgroundColor = UIColor.clearColor.CGColor;
+        }
     }
 
-    if (backgroundShadow) {
-        self.flhBackgroundLayer.shadowOpacity = 0.5;
-        self.flhBackgroundLayer.shadowRadius = thickness;
-        self.flhBackgroundLayer.shadowColor = backgroundColor.CGColor;
-        self.flhBackgroundLayer.shadowOffset = getShadowOffset(backgroundPadding);
-    } else {
-        self.flhBackgroundLayer.shadowOpacity = 0;
-    }
-
-    if (knobShadow) {
-        self.flhKnobLayer.shadowOpacity = 0.5;
-        self.flhKnobLayer.shadowRadius = knobThickness;
-        self.flhKnobLayer.shadowColor = backgroundColor.CGColor;
-        self.flhKnobLayer.shadowOffset = CGSizeMake(knobThickness/2.0, knobThickness/2.0);
-    } else {
-        self.flhKnobLayer.shadowOpacity = 0;
-    }
-
-    if (gradient) {
-        self.flhLayer.colors = @[(id)color.CGColor, (id)gradientColor.CGColor];
-    } else {
-        self.flhLayer.colors = nil;
-    }
+    self.flhLayer.frame = getFrameForFillProgress([self flhRealProgress], self.flhBackgroundLayer.bounds, backgroundPadding);
+    if (knob) self.flhKnobLayer.frame = getKnobFrame(self.flhLayer.bounds, self.layer, self.flhLayer);
 }
 
 -(void)addSubview:(id)xxx {
@@ -543,6 +545,7 @@ CGPoint getEndPoint() {
 void refreshHUD() {
     [CATransaction begin];
     [CATransaction setDisableActions: YES];
+    needsCompleteUpdate = YES;
     [lastHUD layoutSubviews];
     [CATransaction commit];
 }
@@ -585,7 +588,7 @@ void reloadColors() {
     [preferences registerFloat:&backgroundCornerRadius default:0.0 forKey:@"BackgroundCornerRadius"];
     [preferences registerFloat:&backgroundPadding default:0.0 forKey:@"BackgroundPadding"];
     [preferences registerFloat:&opacity default:1.0 forKey:@"Opacity"];
-    [preferences registerInteger:&blurStyle default:2 forKey:@"BlurStyle"];
+    [preferences registerInteger:&blurStyle default:2030 forKey:@"BlurStyle"];
     [preferences registerBool:&blurEnabled default:YES forKey:@"BlurEnabled"];
     [preferences registerFloat:&blurRadius default:30.0 forKey:@"BlurRadius"];
 

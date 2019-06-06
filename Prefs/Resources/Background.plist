@@ -169,6 +169,8 @@
 			<string>PSLinkListCell</string>
 			<key>detail</key>
 			<string>PSListItemsController</string>
+			<key>default</key>
+			<integer>2030</integer>
 			<key>key</key>
 			<string>BlurStyle</string>
 			<key>validTitles</key>
